@@ -1,0 +1,99 @@
+// =================== ENUMS ===================
+enum AccountRole { ADMIN, STAFF, READER }
+enum AccountStatus { ACTIVE, SUSPENDED }
+enum LoanStatus { RESERVED, ISSUED, RETURNED, CANCELLED, OVERDUE }
+
+// =================== ENTITIES ===================
+
+// lms_catalog
+entity Publisher {
+  publisherCode String required,
+  name String required,
+  establishedYear Integer
+}
+
+entity Author {
+  name String required
+}
+
+entity Book {
+  isbn String required,     // natural id; uniqueness enforced at DB layer
+  title String required,
+  edition Integer,
+  category String,
+  price BigDecimal required,
+  publicationYear Integer
+}
+
+// lms_users
+entity Reader {
+  userCode String required, // maps to "UserId"
+  firstName String required,
+  lastName String required,
+  email String required,
+  address String
+}
+
+entity ReaderPhone {
+  phoneNumber String required,
+  label String
+}
+
+entity Staff {
+  staffCode String required,
+  firstName String required,
+  lastName String required
+}
+
+entity Account {
+  login String required,
+  passwordHash String required,
+  role AccountRole required,
+  status AccountStatus required
+}
+
+// lms_circulation
+entity Loan {
+  reservedAt Instant,
+  issuedAt Instant,
+  dueAt Instant,
+  returnedAt Instant,
+  status LoanStatus required
+}
+
+// =================== RELATIONSHIPS ===================
+
+// Catalog
+relationship ManyToOne {
+  Book{publisher(required)} to Publisher
+}
+
+relationship ManyToMany {
+  Book{authors} to Author{books}
+}
+
+// Users
+relationship OneToMany {
+  Reader{phones} to ReaderPhone{reader(required)}
+}
+
+relationship ManyToMany {
+  Staff{readers} to Reader{staffs}
+}
+
+relationship OneToOne {
+  Account{reader} to Reader
+  Account{staff}  to Staff
+}
+
+// Circulation
+relationship ManyToOne {
+  Loan{book(required)}   to Book
+  Loan{reader(required)} to Reader
+  Loan{issuedBy}         to Staff
+  Loan{returnCheckedBy}  to Staff
+}
+
+dto * with mapstruct
+paginate Book, Reader, Staff, Author with pagination
+service all with serviceClass
