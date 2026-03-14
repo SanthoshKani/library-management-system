@@ -1,0 +1,32 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: lms
+services:
+  app:
+    image: lms
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=prod,api-docs
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+      - SPRING_SECURITY_REMEMBER_ME_KEY=77de3809bfd4f3b7d8a29db20587cb780c3a889aa85dfa61ea3b471c157bf7f1de3eb97844329a0008a70c774680c325abf0
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/lms?useLegacyDatetimeCode=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_LIQUIBASE_URL=jdbc:mariadb://mariadb:3306/lms?useLegacyDatetimeCode=false
+    ports:
+      - 127.0.0.1:8080:8080
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8080/management/health
+      interval: 5s
+      timeout: 5s
+      retries: 40
+    depends_on:
+      mariadb:
+        condition: service_healthy
+  mariadb:
+    extends:
+      file: ./mariadb.yml
+      service: mariadb
